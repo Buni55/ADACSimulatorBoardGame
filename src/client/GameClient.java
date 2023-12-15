@@ -17,7 +17,9 @@ public class GameClient extends JFrame implements ClientInterface {
 
     public GameClient() {
 
-        playerName = JOptionPane.showInputDialog(this, "Enter your name:", "Login", JOptionPane.PLAIN_MESSAGE);
+        //playerName = JOptionPane.showInputDialog(this, "Enter your name:", "Login", JOptionPane.PLAIN_MESSAGE);
+        playerName = "Buni";
+
         if (playerName == null) {
             System.exit(0);
         }
