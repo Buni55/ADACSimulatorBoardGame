@@ -14,24 +14,21 @@ public class GameServer extends UnicastRemoteObject implements GameServerInterfa
     public GameServer() throws RemoteException {
     }
 
-    @Override
-    public void updateLabel(String newText) throws RemoteException {
-        for (ClientInterface client : connectedClients) {
-            client.updateLabelOnClient(newText);
-        }
-    }
 
     public void handleClientConnection(ClientInterface client, String playerName) throws RemoteException {
         addConnectedClient(client);
         System.out.println("Client connected. Total clients: " + getConnectedClientCount());
         for (ClientInterface clients : connectedClients) {
-            clients.receiveMessage(playerName + " joined!");
+            clients.receiveMessage(playerName + " has joined!");
         }
     }
 
-    public void handleClientDisconnection(ClientInterface client) {
+     public void handleClientDisconnection(ClientInterface client, String playerName) throws RemoteException {
         removeConnectedClient(client);
         System.out.println("Client disconnected. Total clients: " + getConnectedClientCount());
+         for (ClientInterface clients : connectedClients) {
+             clients.receiveMessage(playerName + " has left!");
+         }
     }
 
     @Override
