@@ -2,8 +2,7 @@ package client;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.awt.geom.Path2D;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
@@ -17,53 +16,139 @@ public class DrawingPanel extends JPanel {
     private List<Point2D> points = new ArrayList<>();
     private List<Point2D> selectedPoints = new ArrayList<>();
     private List<Path2D.Float> paths = new ArrayList<>();
-
+    private Point2D draggingPoint = null;
+    private boolean isCurveClosed = false;
     public DrawingPanel() {
-        addMouseListener(new MouseAdapter() {
+        setFocusable(true);
+        addKeyListener(new KeyAdapter() {
             @Override
-            public void mousePressed(MouseEvent e) {
-/*
-
-                if(points.size() % 4 == 0 && selectedPoints.size() >= 4){
-                    selectedPoints.add(e.getPoint());
-                    Path2D.Float path = new Path2D.Float();
-                    for (int i = points.size() - 4; i < points.size(); i++) {
-                        Point2D point = points.get(i);
-                        if (i == points.size() - 4) {
-                            path.moveTo(point.getX(), point.getY());
-                        } else {
-                            path.lineTo(point.getX(), point.getY());
-                        }
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
+                    if (!points.isEmpty()) {
+                        points.remove(points.size() - 1);
+                        isCurveClosed = false;
+                        System.out.println("Point removed");
+                        recalculatePaths();
+                        repaint();
                     }
                 }
-/*
- */
-                if (points.size() % 4 == 0 && selectedPoints.size() < 4) {
-                    if(selectedPoints.size() != 0){
-                    selectedPoints.add(points.get(points.size()-1));
-                    }
-                    points.add(e.getPoint());
-                    selectedPoints.add(e.getPoint());
-                }
-
-                if (selectedPoints.size() == 4) {
-                    selectedPoints.clear();
-                    Path2D.Float path = new Path2D.Float();
-
-                    for (int i = 0; i < 4; i++) {
-                        Point2D point = points.get(points.size() - 4 + i);
-                        if (i == 0) {
-                            path.moveTo(point.getX(), point.getY());
-                        } else {
-                            path.lineTo(point.getX(), point.getY());
-                        }
-                    }
-                    paths.add(path);
-                }
-                repaint();
             }
         });
+            addMouseListener(new MouseAdapter() {
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    requestFocusInWindow();
+                    Point2D clickedPoint = e.getPoint();
+                    draggingPoint = findPoint(clickedPoint);
+
+                    if (draggingPoint != null) {
+                        if (draggingPoint.equals(points.get(0)) && points.size() % 3 == 0 && points.size() >= 3 && isCurveClosed == false) {
+                            closeCurve();
+                            draggingPoint = null;
+                            repaint();
+                        }
+                    } else {
+                        System.out.println("Point added: " + clickedPoint.getX() + " " +  clickedPoint.getY());
+                        points.add(clickedPoint);
+                        recalculatePaths();
+                        repaint();
+                    }
+                }
+
+
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                    if (draggingPoint != null) {
+                        draggingPoint.setLocation(e.getX(), e.getY());
+                        System.out.println("MouseReleased: " + e.getX() + " " + getY());
+                        draggingPoint = null;
+                        repaint();
+                    }
+                }
+            });
+
+            addMouseMotionListener(new MouseMotionListener() {
+                @Override
+                public void mouseDragged(MouseEvent e) {
+                    if (draggingPoint != null) {
+                        System.out.println("MouseDragged");
+                        draggingPoint.setLocation(e.getX(), e.getY());
+                        recalculatePaths();
+                        repaint();
+                    }
+                }
+
+                @Override
+                public void mouseMoved(MouseEvent e) {
+                }
+            });
+
     }
+
+    private void closeCurve() {
+        System.out.println("Im in");
+        if (points.size() < 3) return;
+
+        Point2D startingPoint = points.get(points.size() -3);
+        Point2D controlPoint1 = points.get(points.size() - 2);
+        Point2D controlPoint2 = points.get(points.size() - 1);
+
+        Path2D.Float path = new Path2D.Float();
+        path.moveTo(startingPoint.getX(), startingPoint.getY());
+        path.curveTo(controlPoint1.getX(), controlPoint1.getY(),
+                controlPoint2.getX(), controlPoint2.getY(),
+                points.get(0).getX(), points.get(0).getY());
+        paths.add(path);
+        isCurveClosed = true;
+    }
+
+
+    private Point2D findPoint(Point2D p) {
+        for (Point2D point : points) {
+            if (point.distance(p) < SQUARE_SIZE) {
+                return point;
+            }
+        }
+        return null;
+    }
+
+    private void recalculatePaths() {
+        paths.clear(); // Clear existing paths
+        setPaths();    // Recalculate paths based on current points
+
+        if (isCurveClosed) {
+            // Add the closing curve again
+            closeCurve();
+        }
+    }
+
+
+    private void setPaths() {
+        if (points.size() >= 4) {
+            paths.clear();
+
+            for (int i = 0; i <= points.size() - 4; i += 3) {
+                Path2D.Float path = new Path2D.Float();
+
+                if (i == 0) {
+                    path.moveTo(points.get(0).getX(), points.get(0).getY());
+                } else {
+                    Point2D lastEndPoint = points.get(i);
+                    path.moveTo(lastEndPoint.getX(), lastEndPoint.getY());
+                }
+                Point2D controlPoint1 = points.get(i + 1);
+                Point2D controlPoint2 = points.get(i + 2);
+                Point2D endPoint = points.get(i + 3);
+
+                path.curveTo(controlPoint1.getX(), controlPoint1.getY(),
+                        controlPoint2.getX(), controlPoint2.getY(),
+                        endPoint.getX(), endPoint.getY());
+
+                paths.add(path);
+            }
+        }
+    }
+
 
     @Override
     protected void paintComponent(Graphics g) {
