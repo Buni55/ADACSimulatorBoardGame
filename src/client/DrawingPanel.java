@@ -14,7 +14,6 @@ public class DrawingPanel extends JPanel {
     private static final int SPACING = 5;
 
     private List<Point2D> points = new ArrayList<>();
-    private List<Point2D> selectedPoints = new ArrayList<>();
     private List<Path2D.Float> paths = new ArrayList<>();
     private Point2D draggingPoint = null;
     private boolean isCurveClosed = false;
@@ -112,16 +111,13 @@ public class DrawingPanel extends JPanel {
         return null;
     }
 
-    private void recalculatePaths() {
-        paths.clear(); // Clear existing paths
-        setPaths();    // Recalculate paths based on current points
-
+    private void recalculatePaths(){
+        paths.clear();
+        setPaths();
         if (isCurveClosed) {
-            // Add the closing curve again
             closeCurve();
         }
     }
-
 
     private void setPaths() {
         if (points.size() >= 4) {
@@ -172,12 +168,6 @@ public class DrawingPanel extends JPanel {
             g.fillOval(x - SQUARE_SIZE / 2, y - SQUARE_SIZE / 2, SQUARE_SIZE, SQUARE_SIZE);
         }
 
-        g.setColor(Color.BLUE);
-        for (Point2D point : selectedPoints) {
-            int x = (int) point.getX();
-            int y = (int) point.getY();
-            g.fillOval(x - SQUARE_SIZE / 2, y - SQUARE_SIZE / 2, SQUARE_SIZE, SQUARE_SIZE);
-        }
 
         g.setColor(Color.CYAN);
         Graphics2D g2d = (Graphics2D) g;

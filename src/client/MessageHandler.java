@@ -10,7 +10,7 @@ public class MessageHandler {
 
     private GameClient client;
 
-    public MessageHandler(GameClient client, GameServerInterface server, String playerName) {
+    public MessageHandler(GameClient client, GameServerInterface server, String playerName, GameClientGUI gui) {
         this.server = server;
         this.playerName = playerName;
     }

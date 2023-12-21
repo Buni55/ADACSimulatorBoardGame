@@ -3,13 +3,16 @@ package client;
 import server.GameServerInterface;
 
 import javax.swing.*;
+import java.awt.geom.Path2D;
+import java.awt.geom.Point2D;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.List;
 
 
-public class GameClient extends JFrame implements ClientInterface {
+public class GameClient extends JFrame implements ClientInterface, DrawingObserver {
     private GameServerInterface server;
     private String playerName;
     private MessageHandler messageHandler;
@@ -36,14 +39,18 @@ public class GameClient extends JFrame implements ClientInterface {
             e.printStackTrace();
             System.out.println("Failed to connect to the server.");
         }
-
-        messageHandler = new MessageHandler(this, server, playerName);
+        messageHandler = new MessageHandler(this, server, playerName, gameClientGUI);
     }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             new GameClient();
         });
+    }
+
+    @Override
+    public void onDrawingChanged(List<Point2D> points, List<Path2D.Float> paths) throws RemoteException{
+            sendDrawing(points, paths);
     }
     @Override
     public void receiveMessage(String message) throws RemoteException {
@@ -56,5 +63,8 @@ public class GameClient extends JFrame implements ClientInterface {
     @Override
     public void handleClientDisconnection(GameClient client){
         messageHandler.disconnectionMessage(client, playerName);
+    }
+    @Override
+    public void sendDrawing(List<Point2D> points, List<Path2D.Float> paths) throws RemoteException {
     }
 }
